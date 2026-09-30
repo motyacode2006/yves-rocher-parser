@@ -4,3 +4,8 @@ __pycache__/
 *.xlsx
 .vscode/
 *.pyc
+# Артефакты парсинга
+bad_records.json
+stats.json
+debug_card.html
+*.xlsx
