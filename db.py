@@ -1,6 +1,8 @@
-# db.py
 import os
 from dotenv import load_dotenv
+import psycopg2
+from psycopg2.extras import execute_values
+
 load_dotenv()
 
 DB_CONFIG = {
@@ -19,7 +21,7 @@ def get_connection():
 
 
 def create_table_if_not_exists():
-    """Создаёт таблицу products, если её ещё нет."""
+    """Создаёт таблицу products (без колонки rating)."""
     sql = """
     CREATE TABLE IF NOT EXISTS products (
         id              SERIAL PRIMARY KEY,
@@ -28,9 +30,10 @@ def create_table_if_not_exists():
         price           NUMERIC(10, 2),
         old_price       NUMERIC(10, 2),
         discount        VARCHAR(20),
-        rating          INTEGER,
         link            TEXT,
         image_url       TEXT,
+        brand_name      VARCHAR(100),
+        brand_country   VARCHAR(100),
         parsed_at       TIMESTAMP DEFAULT NOW()
     );
     """
@@ -49,30 +52,21 @@ def clear_products():
 
 
 def insert_products(products):
-    """
-    Вставляет список словарей-товаров одной пачкой.
-    products = [{"category": ..., "name": ..., ...}, ...]
-    """
+    """Вставляет список товаров одной пачкой."""
     if not products:
         return 0
 
     sql = """
     INSERT INTO products
-        (category, name, price, old_price, discount, rating, link, image_url)
+        (category, name, price, old_price, discount,
+         link, image_url, brand_name, brand_country)
     VALUES %s
     """
 
     values = [
-        (
-            p["category"],
-            p["name"],
-            p["price"],
-            p["old_price"],
-            p["discount"],
-            p["rating"],
-            p["link"],
-            p["image_url"],
-        )
+        (p["category"], p["name"], p["price"], p["old_price"],
+         p["discount"], p["link"], p["image_url"],
+         p.get("brand_name", ""), p.get("brand_country", ""))
         for p in products
     ]
 
